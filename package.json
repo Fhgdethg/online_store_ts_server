@@ -7,8 +7,8 @@
   "scripts": {
     "start": "npx nodemon --exec ts-node index.ts",
     "build": "rimraf ./build && npx tcs && node build/index",
-    "lint": "npx eslint ./",
-    "format": "npx eslint ./ --fix"
+    "lint": "npx eslint ",
+    "format": "npx eslint  --fix"
   },
   "keywords": [],
   "author": "",

@@ -55,7 +55,6 @@ class FileController {
     try {
       const file = req.files.file;
       file.name = decodeURIComponent(file.name);
-      console.log(file);
 
       const parent = await File.findOne({
         user: req.user.id,
@@ -71,6 +70,7 @@ class FileController {
       user.usedSpace = user.usedSpace + file.size;
       let path: string;
 
+      console.log(file);
       if (parent) path = `${FILE_PATH}/${user._id}/${parent.path}/${file.name}`;
       else path = `${FILE_PATH}/${user._id}/${file.name}`;
 
@@ -99,6 +99,25 @@ class FileController {
     } catch (err) {
       console.log(err);
       return res.status(500).json({ message: 'Upload file error' });
+    }
+  }
+
+  async downloadFile(req: any, res: Response) {
+    try {
+      const file: any = await File.findOne({_id: req.query.id, user: req.user.id})
+      const path = `${FILE_PATH}/${req.user.id}/${file.path}${file.name}`
+
+      const isFileExist = await fileService.checkIsFileExist(path);
+
+      if (isFileExist) {
+        return res.download(path, file.name)
+      }
+      // sentFile
+
+      return res.status(400).json({message: 'Download file error'})
+    } catch (err) {
+      console.log(err)
+      res.status(500).json({message: 'err'})
     }
   }
 }

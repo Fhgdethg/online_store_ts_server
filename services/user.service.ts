@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 
 import File from '../models/File.js';
 
-import fileService from '../services/file.service.js';
+import fileService from './file.service.js';
 
 import userRepository from '../repositories/user.repository.js';
 
