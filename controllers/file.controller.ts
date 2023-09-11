@@ -1,5 +1,4 @@
-import { Request, Response } from 'express';
-import fs from 'fs/promises';
+import { Response } from 'express';
 
 import File from '../models/File.js';
 
@@ -83,11 +82,15 @@ class FileController {
       file.mv(path);
 
       const type = file.name.split('.').pop();
+      let filePath = file.name
+      if (parent) {
+        filePath = `${parent.path}/${file.name}`
+      }
       const dbFile = new File({
         name: file.name,
         type,
         size: file.size,
-        path: parent?.path,
+        path: filePath,
         parent: parent ? parent._id : req.body.parent,
         user: user._id,
       });
@@ -105,19 +108,37 @@ class FileController {
   async downloadFile(req: any, res: Response) {
     try {
       const file: any = await File.findOne({_id: req.query.id, user: req.user.id})
-      const path = `${FILE_PATH}/${req.user.id}/${file.path}${file.name}`
-
+      const path = `${FILE_PATH}/${req.user.id}/${file.path}`
       const isFileExist = await fileService.checkIsFileExist(path);
 
+      console.log(path)
       if (isFileExist) {
         return res.download(path, file.name)
       }
-      // sentFile
 
       return res.status(400).json({message: 'Download file error'})
     } catch (err) {
       console.log(err)
       res.status(500).json({message: 'err'})
+    }
+  }
+
+  async deleteFile(req: any, res: Response) {
+    try {
+      const file: any = await File.findOne({_id: req.query.id, user: req.user.id})
+
+      if (!file)
+        return res.status(400).json({message: 'file not found'})
+
+      fileService.deleteFile(file)
+
+      await File.findByIdAndRemove(file._id)
+
+      return res.json({message: 'file was deleted'})
+
+    } catch (err) {
+      console.log(err)
+      res.status(400).json({message: 'Dir is not empty'})
     }
   }
 }

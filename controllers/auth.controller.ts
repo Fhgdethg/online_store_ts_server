@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
-import jwt from 'jsonwebtoken';
 
 import User from '../models/User.js';
 
 import userService from '../services/user.service.js';
 
-const SECRET_KEY = `${process.env.SECRET_KEY}`;
+import userRepository from "../repositories/user.repository.js";
 
 class AuthController {
   async registration(req: any, res: Response) {
