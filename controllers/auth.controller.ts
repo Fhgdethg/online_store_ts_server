@@ -39,7 +39,7 @@ class AuthController {
 
   async auth(req: any, res: Response) {
     try {
-      const data: any = await User.findOne({ _id: req.user.id });
+      const data: any = await userRepository.findOneUser({ _id: req.user.id });
 
       if (data.message) return res.status(404).json(data);
 

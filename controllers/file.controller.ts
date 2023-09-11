@@ -1,10 +1,9 @@
 import { Response } from 'express';
 
-import File from '../models/File.js';
-
 import fileService from '../services/file.service.js';
 
 import userRepository from '../repositories/user.repository.js';
+import fileRepository from '../repositories/file.repository.js'
 
 const FILE_PATH = `${process.env.FILE_PATH}`;
 
@@ -12,14 +11,14 @@ class FileController {
   async createDir(req: any, res: Response) {
     try {
       const { email, name, type, parent } = req.body;
-      const file: any = new File({
+      const file: any = fileRepository.addFile({
         email,
         name,
         type,
         parent,
         user: req.user.id,
       });
-      const parentFile: any = await File.findOne({ _id: parent });
+      const parentFile: any = await fileRepository.findOneFile({ _id: parent });
       if (!parentFile) {
         file.path = name;
         await fileService.createDir(file);
@@ -39,7 +38,7 @@ class FileController {
 
   async getFiles(req: any, res: Response) {
     try {
-      const files = await File.find({
+      const files = await fileRepository.findFiles({
         user: req.user.id,
         parent: req.query.parent,
       });
@@ -55,7 +54,7 @@ class FileController {
       const file = req.files.file;
       file.name = decodeURIComponent(file.name);
 
-      const parent = await File.findOne({
+      const parent = await fileRepository.findOneFile({
         user: req.user.id,
         _id: req.body.parent,
       });
@@ -69,7 +68,6 @@ class FileController {
       user.usedSpace = user.usedSpace + file.size;
       let path: string;
 
-      console.log(file);
       if (parent) path = `${FILE_PATH}/${user._id}/${parent.path}/${file.name}`;
       else path = `${FILE_PATH}/${user._id}/${file.name}`;
 
@@ -79,24 +77,7 @@ class FileController {
         return res.status(400).json({ message: 'File already exist' });
       }
 
-      file.mv(path);
-
-      const type = file.name.split('.').pop();
-      let filePath = file.name
-      if (parent) {
-        filePath = `${parent.path}/${file.name}`
-      }
-      const dbFile = new File({
-        name: file.name,
-        type,
-        size: file.size,
-        path: filePath,
-        parent: parent ? parent._id : req.body.parent,
-        user: user._id,
-      });
-
-      await dbFile.save();
-      await user.save();
+      const dbFile = fileService.uploadFile(user, file, parent, path, req.body.parent)
 
       res.json(dbFile);
     } catch (err) {
@@ -107,11 +88,10 @@ class FileController {
 
   async downloadFile(req: any, res: Response) {
     try {
-      const file: any = await File.findOne({_id: req.query.id, user: req.user.id})
+      const file: any = await fileRepository.findOneFile({_id: req.query.id, user: req.user.id})
       const path = `${FILE_PATH}/${req.user.id}/${file.path}`
       const isFileExist = await fileService.checkIsFileExist(path);
 
-      console.log(path)
       if (isFileExist) {
         return res.download(path, file.name)
       }
@@ -125,14 +105,14 @@ class FileController {
 
   async deleteFile(req: any, res: Response) {
     try {
-      const file: any = await File.findOne({_id: req.query.id, user: req.user.id})
+      const file: any = await fileRepository.findOneFile({_id: req.query.id, user: req.user.id})
 
       if (!file)
         return res.status(400).json({message: 'file not found'})
 
       fileService.deleteFile(file)
 
-      await File.findByIdAndRemove(file._id)
+      await fileRepository.findByIdAndRemove(file._id)
 
       return res.json({message: 'file was deleted'})
 

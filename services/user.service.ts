@@ -8,7 +8,6 @@ import fileService from './file.service.js';
 import userRepository from '../repositories/user.repository.js';
 
 import { IUserMinimal } from '../types/userTypes';
-import { Response } from 'express';
 
 const SECRET_KEY = `${process.env.SECRET_KEY}`;
 

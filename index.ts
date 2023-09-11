@@ -7,6 +7,8 @@ import fileRouter from './routes/file.router.js';
 
 import corsMiddleware from './middleware/cors.middleware.js';
 
+import { routes } from "./constants/routes.js";
+
 import { connectDbHandler } from './db.js';
 
 dotenv.config();
@@ -16,8 +18,8 @@ const app = express();
 app.use(corsMiddleware);
 app.use(fileUpload({}));
 app.use(express.json());
-app.use('/api/auth', authRouter);
-app.use('/api/files', fileRouter);
+app.use(`${routes.api}${routes.auth}`, authRouter);
+app.use(`${routes.api}${routes.files}`, fileRouter);
 
 const PORT = process.env.PORT || 5000;
 
